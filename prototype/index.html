@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Прототип сайта СЭВТ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: prototype chrome (toolbar + notes) around a resizable "site" frame; the site itself is greyscale wireframe with brand blue only on CTAs */
+:root{
+  --canvas:#e9ecf2; --paper:#ffffff; --ink:#111a28; --muted:#5a6577; --line:#d3d9e3;
+  --ph:#eef1f6; --ph-line:#c9d0dc; --accent:#0120C1; --accent-ink:#ffffff; --navy:#03294E; --navy-ink:#eaf0f8;
+  --note:#d9480f; --note-bg:#fff4e6; --ok:#2b8a3e;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+/* single light theme by design (ТЗ: светлый дизайн) */
+:root{color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--canvas);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;padding:0 16px;padding-block:0 40px}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- prototype chrome ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--canvas);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.bar h1{font-size:13px;font-weight:700;margin:0;letter-spacing:.02em;white-space:nowrap}
+.bar h1 small{display:block;font:400 11px var(--f-mono);color:var(--muted);letter-spacing:0}
+.seg{display:flex;flex-wrap:wrap;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.seg button:hover{color:var(--ink);background:var(--ph)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tgl{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.spacer{flex:1}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.stage.nonotes{grid-template-columns:minmax(0,1fr)}
+@media (max-width:1100px){.stage{grid-template-columns:minmax(0,1fr)}}
+.frame{margin:0 auto;width:100%;max-width:1440px;background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:max-width .25s}
+.frame[data-device="tablet"]{max-width:820px}
+.frame[data-device="mobile"]{max-width:390px;border-radius:28px;border-width:8px;border-color:var(--ink)}
+.frame-cap{font:400 11px var(--f-mono);color:var(--muted);text-align:center;margin:0 0 6px}
+
+.notes{position:sticky;top:76px;background:var(--note-bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;max-height:calc(100vh - 100px);overflow:auto}
+.notes h2{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--note);margin:0 0 10px}
+.notes ol{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:12.5px}
+.notes li{display:grid;grid-template-columns:22px 1fr;gap:8px}
+.notes li b{font-weight:600}
+.stage.nonotes .notes{display:none}
+
+.mk{position:absolute;top:8px;left:8px;z-index:5;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--note);color:#fff;font:500 11px/20px var(--f-mono);text-align:center;pointer-events:none}
+.notes .mk{position:static;display:inline-block}
+.stage.nonotes .site .mk{display:none}
+
+/* ---------- the site (wireframe) ---------- */
+.site{container-type:inline-size;container-name:site;color:var(--ink);font-weight:400}
+.w{max-width:1200px;margin:0 auto;padding-inline:40px}
+.blk{position:relative;padding-block:56px}
+.blk + .blk{border-top:1px solid var(--line)}
+.eyebrow{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px}
+.h1{font-size:44px;line-height:1.1;font-weight:700;margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+.h2{font-size:30px;line-height:1.2;font-weight:700;margin:0 0 12px;text-wrap:balance}
+.h3{font-size:18px;line-height:1.3;font-weight:500;margin:0 0 6px}
+.lead{font-size:17px;font-weight:300;color:var(--muted);max-width:62ch;margin:0 0 24px}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.head-row{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.head-row > div{min-width:0}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;transition:filter .15s,background .15s,color .15s}
+.btn:hover{filter:brightness(1.15)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:var(--accent);color:var(--accent-ink);filter:none}
+.btn.sm{height:36px;padding:0 14px;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.lnk{color:var(--accent);text-decoration:none;font-weight:500;cursor:pointer;background:none;border:0;padding:0}
+.lnk:hover{text-decoration:underline}
+
+.ph{position:relative;background:var(--ph);border:1px solid var(--ph-line);border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font:400 11.5px var(--f-mono);padding:8px;overflow:hidden;
+  background-image:linear-gradient(to top right,transparent calc(50% - .5px),var(--ph-line) 50%,transparent calc(50% + .5px)),linear-gradient(to top left,transparent calc(50% - .5px),var(--ph-line) 50%,transparent calc(50% + .5px))}
+.ph span{background:var(--ph);padding:2px 6px;border-radius:3px;position:relative}
+.dash{border:1.5px dashed var(--ph-line);border-radius:8px;padding:14px 16px;color:var(--muted);font:400 12px var(--f-mono)}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink);background:var(--paper);white-space:nowrap}
+.badge.mpt{border-color:var(--accent);color:var(--accent)}
+.badge.mpt::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{border:1px solid var(--line);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--paper);transition:border-color .15s,box-shadow .15s;min-width:0}
+a.card,.card.click{cursor:pointer;color:inherit;text-decoration:none}
+a.card:hover,.card.click:hover{border-color:var(--accent);box-shadow:0 6px 20px -12px var(--accent)}
+
+/* header */
+.hdr{position:relative;border-bottom:1px solid var(--line);background:var(--paper);z-index:20}
+.hdr .w{display:flex;align-items:center;gap:28px;height:72px}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;flex:none}
+.logo .ph{width:40px;height:40px;padding:0;font-size:9px}
+.logo b{font-size:18px;letter-spacing:.06em}
+.logo small{display:block;font-size:10.5px;color:var(--muted);font-weight:400;letter-spacing:0;line-height:1.2}
+.nav{display:flex;gap:4px;flex:1;min-width:0}
+.nav > div{position:relative}
+.nav a{display:block;padding:8px 12px;border-radius:6px;color:var(--ink);text-decoration:none;font-weight:500;cursor:pointer;white-space:nowrap}
+.nav a:hover,.nav a.on{color:var(--accent)}
+.nav a.on{box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
+.dd{position:absolute;top:100%;left:0;min-width:260px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 12px 30px -16px rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(4px);transition:.15s}
+.nav > div:hover .dd,.nav > div:focus-within .dd{opacity:1;visibility:visible;transform:none}
+.dd a{font-weight:400}
+.dd a:hover{background:var(--ph)}
+.hdr-r{display:flex;align-items:center;gap:16px;flex:none}
+.tel{font-weight:500;white-space:nowrap;user-select:all}
+.burger{display:none;width:44px;height:44px;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer;flex:none;align-items:center;justify-content:center}
+.burger i,.burger i::before,.burger i::after{display:block;width:18px;height:2px;background:var(--ink);position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}
+.burger i::before{top:-6px}.burger i::after{top:6px}
+.drawer{display:none;border-bottom:1px solid var(--line);padding:12px 0 20px;background:var(--paper)}
+.drawer.open{display:block}
+.drawer a{display:block;padding:12px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:500;cursor:pointer}
+.drawer a.sub{padding-left:16px;font-weight:400;color:var(--muted)}
+.drawer .btn{width:100%;margin-top:16px}
+
+/* crumbs */
+.crumbs{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--muted);padding-top:22px}
+.crumbs a{color:var(--muted);cursor:pointer;text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs span::before{content:"/";margin-right:6px}
+
+/* home */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero .ph{aspect-ratio:5/4;max-width:100%}
+.trust{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:8px}
+.trust > div{padding:18px 20px;border-left:1px solid var(--line);min-width:0}
+.trust > div:first-child{border-left:0}
+.trust b{display:block;font-size:22px;font-weight:700;line-height:1.2}
+.icon{width:44px;height:44px;border-radius:8px;flex:none}
+.comp .ph{aspect-ratio:16/9}
+.why{background:var(--navy);color:var(--navy-ink);border-top:0!important}
+.why .muted,.why .eyebrow{color:var(--navy-ink);opacity:.75}
+.why .num{font-size:34px;font-weight:700;line-height:1.1;margin-bottom:6px}
+.why .card{background:transparent;border-color:rgba(255,255,255,.18)}
+.about{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.about .phs{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:12px;aspect-ratio:4/3}
+.about .phs .ph:first-child{grid-row:span 2}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:24px}
+.facts b{display:block;font-size:26px;font-weight:700}
+.logos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.logos .ph{aspect-ratio:3/2}
+.segs{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:20px;color:var(--muted);font-weight:500}
+.cert .ph{aspect-ratio:3/4}
+.cform{display:grid;grid-template-columns:.8fr 1.2fr;gap:48px}
+.clist{display:grid;gap:16px;align-content:start}
+.clist div b{display:block;font-size:12px;color:var(--muted);font-weight:400}
+
+/* catalog */
+.cat-tile{display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:center;padding:28px}
+.cat-tile .ph{aspect-ratio:1}
+.cat-tile .h2{font-size:24px}
+.prod .ph{aspect-ratio:4/3}
+.prod ul{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:13px}
+.prod li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px}
+.g4 .prod li{grid-template-columns:1fr;gap:0}
+.prod li i{font-style:normal;color:var(--muted)}
+.prod .btns{margin-top:auto;padding-top:8px}
+.prod .btns .btn{flex:1}
+.prod.empty{border-style:dashed}
+
+/* product page */
+.pp-top{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.gal{display:grid;gap:10px}
+.gal .main{aspect-ratio:4/3}
+.gal .th{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.gal .th .ph{aspect-ratio:1;cursor:pointer}
+.gal .th .ph:first-child{border-color:var(--accent)}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13.5px;margin:16px 0 20px}
+.meta dt{color:var(--muted)}.meta dd{margin:0;font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;margin-top:24px}
+.kpis div{padding:14px 16px;border-left:1px solid var(--line);min-width:0}
+.kpis div:first-child{border-left:0}
+.kpis b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.kpis span{font-size:12px;color:var(--muted)}
+.specs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px;align-items:start}
+.toc{position:sticky;top:16px;display:grid;gap:2px;font-size:13px}
+.toc a{padding:7px 12px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none;cursor:pointer}
+.toc a:hover{color:var(--accent);border-color:var(--accent)}
+.sgrp{margin-bottom:28px;min-width:0}
+.sgrp h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:0 0 4px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.sgrp dl{margin:0;display:grid}
+.sgrp dl > div{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.sgrp dt{color:var(--muted)}
+.sgrp dd{margin:0;white-space:pre-line}
+.dl-band{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:20px 24px;border:1px solid var(--line);border-radius:8px;background:var(--ph)}
+.adv .icon{margin-bottom:6px}
+
+/* solutions */
+.sol{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;padding-block:32px;border-top:1px solid var(--line)}
+.sol:first-of-type{border-top:0}
+.sol ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
+.sol li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;padding:16px 18px;border:1px solid var(--line);border-radius:8px}
+details.case{margin-top:8px;font-size:13px}
+details.case summary{cursor:pointer;color:var(--accent);font-weight:500}
+details.case summary:hover{text-decoration:underline}
+details.case .dash{margin-top:8px}
+
+/* cta band + footer */
+.cta{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;background:var(--navy);color:var(--navy-ink);border-radius:10px;padding:32px 36px}
+.cta .h2{margin:0}
+.cta p{margin:6px 0 0;opacity:.8}
+.cta .btn.ghost{color:var(--navy-ink);border-color:var(--navy-ink)}
+.cta .btn.ghost:hover{background:var(--navy-ink);color:var(--navy)}
+.ftr{background:var(--navy);color:var(--navy-ink);padding-block:48px 24px;font-size:13px}
+.ftr .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.3fr;gap:32px}
+.ftr a{display:block;color:var(--navy-ink);opacity:.8;text-decoration:none;padding:3px 0;cursor:pointer}
+.ftr a:hover{opacity:1;text-decoration:underline}
+.ftr h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.6;font-weight:500}
+.ftr .logo .ph{background-color:transparent;border-color:rgba(255,255,255,.3)}
+.ftr .logo .ph span{background:var(--navy)}
+.ftr .btn{margin-top:14px}
+.ftr .bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:36px;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);opacity:.7;font-size:12px}
+
+/* forms */
+.form{display:grid;gap:14px}
+.form .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fld{display:grid;gap:5px;font-size:12.5px;color:var(--muted)}
+.fld input,.fld textarea{height:44px;border:1px solid var(--line);border-radius:6px;padding:0 12px;background:var(--paper);font-size:14px;color:var(--ink)}
+.fld textarea{height:96px;padding:10px 12px;resize:vertical}
+.fld input:hover,.fld textarea:hover{border-color:var(--muted)}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+.file{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:6px;padding:12px 14px;font-size:13px;cursor:pointer}
+.file:hover{border-color:var(--accent)}
+.file input{display:none}
+.chk{display:flex;gap:10px;align-items:start;font-size:12.5px;color:var(--muted)}
+.chk input{margin-top:2px;accent-color:var(--accent)}
+.err{color:var(--note);font-size:12px;min-height:16px}
+.done{display:grid;gap:8px;justify-items:start;padding:24px;border:1px solid var(--ok);border-radius:8px}
+.done b{color:var(--ok)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,12,24,.55)}
+.modal[hidden]{display:none!important}
+.mbox{position:relative;background:var(--paper);border-radius:12px;width:100%;max-width:560px;max-height:calc(100vh - 32px);overflow:auto;padding:32px}
+.mbox .x{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;background:none;font-size:22px;cursor:pointer;border-radius:6px;color:var(--muted)}
+.mbox .x:hover{background:var(--ph);color:var(--ink)}
+
+/* sitemap */
+.tree{display:grid;gap:14px}
+.tree .lvl{display:flex;flex-wrap:wrap;gap:12px}
+.node{border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:180px;flex:1;background:var(--paper);cursor:pointer;transition:border-color .15s}
+.node:hover{border-color:var(--accent)}
+.node b{display:block}
+.node small{color:var(--muted);font-size:12px}
+.node.root{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.node.root small{color:var(--paper);opacity:.7}
+.node .kids{margin-top:10px;display:grid;gap:6px}
+.node .kids span{display:block;font-size:12px;padding:6px 8px;border:1px dashed var(--ph-line);border-radius:5px}
+.admin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.admin ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+
+/* ---------- container breakpoints (react to the frame, not the window) ---------- */
+@container site (max-width: 1080px){
+  .nav a{padding:8px 8px}
+  .tel{display:none}
+  .g5{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .trust{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .trust > div:nth-child(4){border-left:0}
+  .trust > div:nth-child(n+4){border-top:1px solid var(--line)}
+  .ftr .cols{grid-template-columns:1fr 1fr}
+}
+@container site (max-width: 900px){
+  .w{padding-inline:24px}
+  .nav,.hdr-r .btn{display:none}
+  .burger{display:inline-flex}
+  .hdr .w{justify-content:space-between}
+  .h1{font-size:34px}.h2{font-size:26px}
+  .hero,.about,.cform,.pp-top{grid-template-columns:1fr;gap:28px}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .logos{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .specs{grid-template-columns:1fr}
+  .toc{position:static;display:flex;overflow-x:auto;gap:4px;padding-bottom:6px}
+  .toc a{border-left:0;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+  .sol{grid-template-columns:1fr;gap:16px}
+  .admin{grid-template-columns:1fr}
+}
+@container site (max-width: 600px){
+  .w{padding-inline:16px}
+  .blk{padding-block:40px}
+  .hdr .w{height:60px}
+  .logo small{display:none}
+  .h1{font-size:28px}.h2{font-size:22px}.lead{font-size:15px}
+  .g2,.g3,.g4,.g5{grid-template-columns:1fr}
+  .trust{grid-template-columns:1fr 1fr}
+  .trust > div{border-left:0!important;border-top:1px solid var(--line)}
+  .trust > div:nth-child(-n+2){border-top:0}
+  .trust > div:nth-child(even){border-left:1px solid var(--line)!important}
+  .trust b{font-size:18px}
+  .facts{grid-template-columns:1fr 1fr 1fr}
+  .facts b{font-size:20px}
+  .logos{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cat-tile{grid-template-columns:1fr 96px;padding:18px}
+  .cat-tile .h2{font-size:19px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpis div:nth-child(3){border-left:0}
+  .kpis div:nth-child(n+3){border-top:1px solid var(--line)}
+  .sgrp dl > div{grid-template-columns:1fr;gap:2px}
+  .btns .btn{flex:1}
+  .form .row2{grid-template-columns:1fr}
+  .cta{padding:24px 20px}
+  .ftr .cols{grid-template-columns:1fr}
+  .sol li{grid-template-columns:1fr}
+  .dl-band .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>СЭВТ · прототипы сайта<small>Этап 1 · v4 · 09.10.2026</small></h1>
+  <div class="seg" id="pages" role="group" aria-label="Страница"></div>
+  <div class="spacer"></div>
+  <div class="seg" id="devs" role="group" aria-label="Устройство">
+    <button data-dev="desktop" aria-pressed="true">Десктоп</button>
+    <button data-dev="tablet" aria-pressed="false">Планшет</button>
+    <button data-dev="mobile" aria-pressed="false">Мобильный</button>
+  </div>
+  <label class="tgl"><input type="checkbox" id="shownotes"> Пояснения</label>
+</div>
+
+<div class="stage nonotes" id="stage">
+  <div>
+    <p class="frame-cap" id="cap"></p>
+    <div class="frame" id="frame" data-device="desktop">
+      <div class="site" id="site"></div>
+    </div>
+  </div>
+  <aside class="notes" id="notes" aria-label="Пояснения к странице"></aside>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="mbox">
+    <button class="x" id="mclose" aria-label="Закрыть">×</button>
+    <div id="mbody"></div>
+  </div>
+</div>
+
+<script>
+const CO = {
+  phone:"+7 (495) 252-85-78", mail:"mail@savt.ru", addr:"Москва, Старокалужское шоссе, 62",
+  inn:"7707088771", kpp:"772801001", ogrn:"1027739148480"
+};
+
+const PRODUCTS = {
+  lga4189:{
+    id:"lga4189", name:"Сервер СЭВТ (LGA4189)", model:"СНЛД.401360.000-01", ff:"2U 19″ (опционально 4U)",
+    reg:"10736315", regFrom:"11.11.2025", regTo:"10.11.2030",
+    purpose:"Хранение, резервное копирование и оперативная обработка больших массивов данных, выполнение ресурсоёмких вычислений, построение облачных инфраструктур.",
+    kpi:[["2 × CPU","Intel Xeon Scalable Gen3"],["до 40","ядер на процессор"],["до 8 ТБ","DDR4 ECC, 16 слотов"],["до 24","дисков 2,5″ в 2U"]],
+    short:[["Процессоры","2 × Intel Xeon Scalable Gen3, до 40 ядер"],["Память","до 8 192 ГБ DDR4 ECC"],["Корпус","2U, до 24 × 2,5″ / 12 × 3,5″"]],
+    specs:{
+      "Процессор":[["Количество / сокет","2 процессора, сокет LGA4189"],["Поддерживаемые ЦПУ","Intel Xeon Scalable Gen3 (Ice Lake-SP)"],["Макс. конфигурация","до 40 ядер на CPU, до 4,4 ГГц Turbo, кэш L3 до 60 МБ"],["Виртуализация","Intel VT-x / VT-d"]],
+      "Память":[["Слоты / тип","16 слотов DDR4 ECC RDIMM / LRDIMM"],["Максимальный объём","до 8 192 ГБ"]],
+      "Хранение":[["Отсеки накопителей","2U: до 24 × 2,5″ SFF или до 12 × 3,5″ LFF (SATA/SAS), горячая замена\n4U: до 36 × 2,5″ SFF или до 18 × 3,5″ LFF (SATA/SAS), горячая замена"],["Задние отсеки","2 × 2,5″ (опционально)"],["M.2 / внутренние","1 × M.2 2280 NVMe (загрузочный)"],["RAID","Intel VROC: 0, 1, 10 (Standard) / 0, 1, 10, 5 (Premium)\nSATA III встроенный: 0, 1, 10\nАппаратный RAID-контроллер (опционально)"]],
+      "Слоты расширения":[["Слоты PCIe","5 × PCIe 4.0 x16 + 5 × PCIe 3.0 x8 в форм-факторе x16"],["GPU / ускорители","опционально"],["Внутренние разъёмы","3 × SFF-8643 SATA 6 Гбит/с, 2 × SFF-8654 4i PCIe 3.0 (NVMe)\n2 × SATA III 7-pin DOM 6 Гбит/с, 1 × USB 3.0 на плате"]],
+      "Сеть и управление":[["LAN-порты","2 × RJ-45 1 Гбит/с + возможность установки дополнительных"],["Порт управления (BMC)","1 × RJ-45 1GbE выделенный"],["BMC-контроллер","ASPEED AST2500"],["Протоколы управления","IPMI 2.0, KVM over IP, Virtual Media, UID\nМониторинг температуры, вентиляторов, напряжения"]],
+      "Питание":[["Блоки питания","до 2000 Вт, горячая замена, резервирование 1+1"],["Входное напряжение","AC 100–240 В, 50/60 Гц"]],
+      "Порты ввода-вывода":[["Лицевая панель","Кнопки: Power, UID\nИндикаторы: Power, HDD, Network, Error, UID\n1 × USB, 2 × USB 3.0 (опционально)"],["Задняя панель","2 × USB 3.0 + 2 × USB 2.0\nVGA, COM RJ-45, BMC RJ-45"]],
+      "Безопасность и ОС":[["АПМДЗ и СЗИ","Соболь 4.x"],["Совместимые ОС","Astra Linux SE 1.6 / 1.7 / 1.8, ALT Linux / ALT СП"],["Обновление прошивок","Через BMC Web / CLI"]]
+    }
+  },
+  lga3647:{
+    id:"lga3647", name:"Сервер СЭВТ (LGA3647)", model:"СНЛД.401360.000", ff:"2U 19″ (опционально 4U)",
+    reg:"10736314", regFrom:"11.11.2025", regTo:"10.11.2030",
+    purpose:"Хранение, резервное копирование и оперативная обработка больших массивов данных, выполнение ресурсоёмких вычислений, построение облачных инфраструктур.",
+    kpi:[["2 × CPU","Intel Xeon Scalable Gen1/Gen2"],["до 28","ядер на процессор"],["до 4 ТБ","DDR4 ECC, 16 слотов"],["до 24","дисков 2,5″ в 2U"]],
+    short:[["Процессоры","2 × Intel Xeon Scalable Gen1/Gen2, до 28 ядер"],["Память","до 4 096 ГБ DDR4 ECC"],["Корпус","2U, до 24 × 2,5″ / 12 × 3,5″"]],
+    specs:null
+  }
+};
+// LGA3647 shares the chassis; override only what differs in its datasheet
+PRODUCTS.lga3647.specs = JSON.parse(JSON.stringify(PRODUCTS.lga4189.specs));
+(s=>{
+  s["Процессор"]=[["Количество / сокет","2 процессора, сокет LGA3647"],["Поддерживаемые ЦПУ","Intel Xeon Scalable Gen1/Gen2 (Skylake-SP, Cascade Lake-SP)"],["Макс. конфигурация","до 28 ядер на CPU, до 4 ГГц Turbo, кэш L3 до 38,5 МБ"],["Виртуализация","Intel VT-x / VT-d"]];
+  s["Память"][1]=["Максимальный объём","до 4 096 ГБ"];
+  s["Слоты расширения"][0]=["Слоты PCIe","4 × PCIe 3.0 x16 + 2 × PCIe 3.0 x8 в форм-факторе x16"];
+})(PRODUCTS.lga3647.specs);
+
+const CATS = [
+  {id:"servers", name:"Серверы", desc:"Стоечные серверы 2U/4U на Intel Xeon Scalable и «Байкал» для хранения и обработки данных.", mpt:true},
+  {id:"pc", name:"ПК и моноблоки", desc:"ПЭВМ и моноблоки, в том числе Savt ET-541 и ET-641 на «Байкал-М» из реестра Минпромторга.", mpt:true},
+  {id:"ws", name:"Рабочие станции и SFF", desc:"Рабочие станции и компактные системы малого форм-фактора.", mpt:false},
+  {id:"storage", name:"СХД", desc:"Системы хранения данных.", mpt:false}
+];
+
+const mk = n => `<span class="mk">${n}</span>`;
+const ph = (label, cls="") => `<div class="ph ${cls}"><span>${label}</span></div>`;
+const mpt = p => `<span class="badge mpt">Реестр МПТ № ${p.reg}</span>`;
+
+/* ---------- shared chrome ---------- */
+function header(active){
+  const a = k => active===k ? "on" : "";
+  return `<header class="hdr"><div class="w">
+    <div class="logo" data-go="home">${ph("ЛОГО")}<div><b>СЭВТ</b><small>Российский производитель<br>IT-оборудования</small></div></div>
+    <nav class="nav">
+      <div><a class="${a("products")}" data-go="products">Продукты ▾</a>
+        <div class="dd">${CATS.map(c=>`<a data-go="${c.id==="servers"?"category":"products"}">${c.name}</a>`).join("")}</div></div>
+      <div><a class="${a("solutions")}" data-go="solutions">Решения и услуги</a></div>
+      <div><a data-go="home" data-anchor="about">О компании</a></div>
+      <div><a class="${a("contacts")}" data-go="contacts">Контакты</a></div>
+    </nav>
+    <div class="hdr-r"><span class="tel">${CO.phone}</span><button class="btn sm" data-kp>Запросить КП</button>
+      <button class="burger" data-burger aria-label="Меню"><i></i></button></div>
+  </div>
+  <div class="drawer" id="drawer"><div class="w">
+    <a data-go="products">Продукты</a>${CATS.map(c=>`<a class="sub" data-go="${c.id==="servers"?"category":"products"}">${c.name}</a>`).join("")}
+    <a data-go="solutions">Решения и услуги</a><a data-go="home" data-anchor="about">О компании</a><a data-go="contacts">Контакты</a>
+    <p class="tel" style="margin:16px 0 0">${CO.phone}</p>
+    <button class="btn" data-kp>Запросить КП</button>
+  </div></div></header>`;
+}
+function footer(){
+  return `<footer class="ftr" style="position:relative">${mk("Ф")}<div class="w">
+    <div class="cols">
+      <div><div class="logo" data-go="home">${ph("ЛОГО")}<div><b>СЭВТ</b></div></div>
+        <p style="opacity:.75;margin:12px 0 0">Российский производитель IT-оборудования с 1995 года.</p>
+        <button class="btn" data-kp>Запросить КП</button></div>
+      <div><h4>Продукты</h4>${CATS.map(c=>`<a data-go="${c.id==="servers"?"category":"products"}">${c.name}</a>`).join("")}</div>
+      <div><h4>Компания</h4><a data-go="solutions">Решения и услуги</a><a data-go="home" data-anchor="about">О компании</a><a data-go="home" data-anchor="certs">Лицензии и сертификаты</a><a data-go="contacts">Контакты</a></div>
+      <div><h4>Контакты</h4><p style="margin:0 0 4px;user-select:all">${CO.phone}</p><p style="margin:0 0 4px;user-select:all">${CO.mail}</p><p style="margin:0 0 10px;opacity:.8">${CO.addr}</p>
+        <p style="margin:0;opacity:.6;font-size:12px">ООО «СЭВТ» · ИНН ${CO.inn} · ОГРН ${CO.ogrn}</p></div>
+    </div>
+    <div class="bottom"><span>© 1995–2026 ООО «СЭВТ»</span><a style="display:inline">Политика обработки персональных данных</a></div>
+  </div></footer>`;
+}
+const crumbs = items => `<div class="w crumbs">${items.map((it,i)=> i===0 ? `<a data-go="${it[1]}">${it[0]}</a>` : it[1] ? `<span><a data-go="${it[1]}">${it[0]}</a></span>` : `<span>${it[0]}</span>`).join("")}</div>`;
+const ctaBand = (title, text) => `<section class="blk" style="border-top:0">${mk("CTA")}<div class="w"><div class="cta">
+  <div><div class="h2">${title}</div><p>${text}</p></div>
+  <div class="btns"><button class="btn" style="background:var(--paper);color:var(--navy);border-color:var(--paper)" data-kp>Запросить КП</button><button class="btn ghost" data-go="contacts">Контакты</button></div>
+</div></div></section>`;
+
+function formHTML(id, subject, compact){
+  return `<form class="form" data-form="${id}" novalidate>
+    ${subject?`<div class="badge" style="justify-self:start">Тема: ${subject}</div>`:""}
+    <div class="row2">
+      <label class="fld" for="${id}-name">Имя *<input id="${id}-name" name="name" autocomplete="name" placeholder="Иван Петров"></label>
+      <label class="fld" for="${id}-co">Компания<input id="${id}-co" name="company" autocomplete="organization" placeholder="ООО «Пример»"></label>
+    </div>
+    <label class="fld" for="${id}-contact">Телефон или e-mail *<input id="${id}-contact" name="contact" placeholder="+7 ___ ___-__-__ или name@company.ru"></label>
+    <label class="fld" for="${id}-msg">Сообщение<textarea id="${id}-msg" name="msg" placeholder="Количество, конфигурация, сроки поставки">${subject?`Прошу подготовить КП: ${subject}.`:""}</textarea></label>
+    <label class="file" for="${id}-file"><span class="btn ghost sm">Прикрепить ТЗ</span><span class="muted" data-fname>PDF, DOC, XLS до 20 МБ</span><input type="file" id="${id}-file"></label>
+    <label class="chk" for="${id}-agree"><input type="checkbox" id="${id}-agree" name="agree"> <span>Согласен на обработку персональных данных в соответствии с <a class="lnk">политикой</a></span></label>
+    <div class="err" data-err></div>
+    <div><button class="btn" type="submit">Отправить</button></div>
+  </form>`;
+}
+
+/* ---------- pages ---------- */
+const PAGES = {
+home:{ label:"Главная", url:"/", render:()=>`${header("home")}
+  <section class="blk" style="padding-top:64px">${mk(1)}<div class="w hero">
+    <div>
+      <h1 class="h1">Российский производитель серверов и компьютеров с 1995 года</h1>
+      <p class="lead">ПЭВМ и серверы марки «СЭВТ», разработка АСУ и информационных систем, ситуационные центры. Лицензии ФСБ России, Рособоронзаказа и Роскосмоса.</p>
+      <div class="btns"><button class="btn" data-go="products">Продукты</button><button class="btn ghost" data-kp>Запросить КП</button></div></div>
+    ${ph("Фото: серверная стойка / цех сборки")}
+  </div></section>
+  <section class="blk" style="padding-block:0 56px;border-top:0">${mk(2)}<div class="w"><div class="trust">
+    <div><b>Реестр МПТ</b><span class="muted small">серверы и ПК в реестре российской радиоэлектроники</span></div>
+    <div><b>ФСТЭК</b><span class="muted small">лицензии до «СС»</span></div>
+    <div><b>ISO 9001</b><span class="muted small">сертифицированная система менеджмента качества</span></div>
+    <div><b>30 лет</b><span class="muted small">на рынке, с 1995 года</span></div>
+    <div><b>1000+</b><span class="muted small">исполненных госзаказов</span></div>
+  </div></div></section>
+  <section class="blk">${mk(3)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Три направления работы</h2></div></div>
+    <div class="grid g3 comp">
+      ${[["Производство","ПЭВМ и серверы марки «СЭВТ». Конфигурация под требования заказчика, по запросу — в защищённом от ПЭМИН исполнении.","products"],["Интеграция","Ситуационные центры и конференц-залы, АРМ, ЛВС и СКС, компьютерные классы. Монтаж, наладка и сопровождение.","solutions"],["НИОКР / ОКР","АСУ, комплексы средств автоматизации, ПО общего и специального назначения, в том числе для Минобороны России и органов власти.","solutions"]].map(c=>`
+      <a class="card" data-go="${c[2]}">${ph("Иллюстрация")}<div class="h3">${c[0]}</div><p class="muted" style="margin:0">${c[1]}</p><span class="lnk">Подробнее →</span></a>`).join("")}
+    </div></div></section>
+  <section class="blk">${mk(4)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Оборудование из реестра Минпромторга</h2></div><button class="btn ghost" data-go="products">Весь каталог</button></div>
+    <div class="grid g4">${prodCard(PRODUCTS.lga4189)}${prodCard(PRODUCTS.lga3647)}${emptyCard("ПЭВМ Savt ET-541","Десктоп · «Байкал-М»",1)}${emptyCard("Моноблок Savt ET-641","Моноблок · «Байкал-М»",1)}</div>
+  </div></section>
+  <section class="blk why">${mk(5)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Полный цикл: от ТЗ до сервиса</h2></div></div>
+    <div class="grid g4">
+      ${[["Полный цикл","Проработка ТЗ, сборка, тестирование, поставка и сервис в одной компании."],["Свой ЗИП","Собственный склад запасных частей: замена без ожидания поставок."],["24 часа","Коммерческое предложение по вашему ТЗ в течение суток."],["2–4 недели","Срок поставки серийных конфигураций."]].map(x=>`<div class="card"><div class="num">${x[0]}</div><p class="muted" style="margin:0">${x[1]}</p></div>`).join("")}
+    </div></div></section>
+  <section class="blk" id="about">${mk(6)}<div class="w about">
+    <div><h2 class="h2">ИТ-компания «СЭВТ» работает с 1995 года</h2>
+      <p class="muted">Компания создана в Москве в 1995 году. Первые два года основным направлением была поставка компьютерных комплектующих и расходных материалов в регионы России. Затем «СЭВТ» перешла к разработке информационных систем.</p>
+      <p class="muted">Сегодня компания производит ПЭВМ и серверы марки «СЭВТ», разрабатывает АСУ, комплексы средств автоматизации и ПО, в том числе для Министерства обороны РФ и органов власти, проектирует ситуационные центры и сети.</p></div>
+    <div class="phs">${ph("Фото производства")}${ph("Фото")}${ph("Фото")}</div>
+  </div></section>
+  <section class="blk">${mk(7)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Нам доверяют</h2></div></div>
+    <div class="logos">${Array.from({length:12},(_,i)=>ph("Логотип "+(i+1))).join("")}</div>
+    <div class="segs"><span>Министерство обороны РФ</span><span>·</span><span>Органы государственной власти</span><span>·</span><span>Оборонно-промышленный комплекс</span><span>·</span><span>Космическая отрасль</span></div>
+  </div></section>
+  <section class="blk" id="certs">${mk(8)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Лицензии и сертификаты</h2></div></div>
+    <div class="grid g4 cert">${["Реестр Минпромторга","Лицензия ФСБ России","Лицензия ФСТЭК России","Лицензия Рособоронзаказа","Лицензия Роскосмоса","Сертификат Таможенного союза","ГОСТ Р ИСО 9001-2015","ГОСТ РВ 0015-002-2012"].map(t=>`<a class="card">${ph("Скан документа")}<div class="h3" style="font-size:15px">${t}</div></a>`).join("")}</div>
+  </div></section>
+  <section class="blk">${mk(9)}<div class="w cform">
+    <div><h2 class="h2">Обсудим ваш проект</h2>
+      <div class="clist"><div><b>Телефон</b><span class="tel">${CO.phone}</span></div><div><b>E-mail</b><span style="user-select:all">${CO.mail}</span></div><div><b>Адрес</b>${CO.addr}</div></div>
+      <p style="margin-top:20px"><button class="lnk" data-go="contacts">Все контакты и реквизиты →</button></p></div>
+    <div class="card" style="padding:28px">${formHTML("home",null,true)}</div>
+  </div></section>
+  ${footer()}`,
+  notes:[
+    ["1","Герой","Позиционирование + 2 CTA: «Продукты» (каталог) и «Запросить КП» (модальное окно). Фото предоставляет Заказчик."],
+    ["2","Лента доверия","5 фактов из ТЗ: реестр МПТ, ФСТЭК до «СС», ISO 9001, 30 лет, 1000+ госзаказов. На мобильном 2 колонки."],
+    ["3","Три компетенции","Карточки-переходы: Производство → Продукты; Интеграция и НИОКР → Решения и услуги."],
+    ["4","Витрина","Серверы из даташитов и ПЭВМ Savt ET-541 / ET-641 на «Байкал-М» (в реестре МПТ по данным savt.ru, характеристики — от Заказчика). Товары выбираются в админке флагом «показывать на главной». Пунктирные карточки ждут данных Заказчика."],
+    ["5","Почему СЭВТ","Тёмно-синяя секция (вторичный цвет #03294E): полный цикл, ЗИП, КП за 24 ч, поставка 2–4 недели."],
+    ["6","О компании","История с действующего savt.ru («Подробнее о нас»). Фото и финальную редакцию текста даёт Заказчик. Якорь #about из меню."],
+    ["7","Клиенты","Сетка логотипов (12 шт., монохром, цвет при наведении) и строка сегментов."],
+    ["8","Лицензии","Перечень по разделу «Лицензии и сертификаты» savt.ru + ФСТЭК и реестр МПТ из ТЗ. Номера и сроки — со сканов Заказчика. Увеличение по клику, управление из админки."],
+    ["9","Контакты + форма","Краткий блок. Форма та же, что «Запросить КП» (п. 6.1 ТЗ): заявка сохраняется в админке и уходит на e-mail."],
+    ["Ф","Футер","Навигация, контакты, реквизиты, кнопка КП, ссылка на политику ПДн."]
+  ]},
+
+products:{ label:"Продукты", url:"/products/", render:()=>`${header("products")}
+  ${crumbs([["Главная","home"],["Продукты"]])}
+  <section class="blk" style="padding-top:24px;border-top:0">${mk(1)}<div class="w">
+    <h1 class="h1">Продукты</h1>
+    <p class="lead">Серверы, компьютеры, рабочие станции и системы хранения данных собственного производства. Большинство моделей включены в реестр российской радиоэлектронной продукции Минпромторга.</p>
+    <div class="grid g2" style="position:relative">${mk(2)}
+      ${CATS.map(c=>`<a class="card cat-tile" data-go="${c.id==="servers"?"category":"products"}">
+        <div style="display:grid;gap:10px;align-content:start;min-width:0">
+          ${c.mpt?`<span class="badge mpt" style="justify-self:start">В реестре МПТ</span>`:`<span class="badge" style="justify-self:start;visibility:hidden">—</span>`}
+          <div class="h2">${c.name}</div><p class="muted" style="margin:0">${c.desc}</p>
+          <span class="lnk">Смотреть модели →</span></div>
+        ${ph("Фото / иконка")}</a>`).join("")}
+    </div>
+  </div></section>
+  ${ctaBand("Нужна конфигурация под ТЗ?","Пришлите техническое задание — подготовим КП за 24 часа.")}
+  ${footer()}`,
+  notes:[
+    ["1","Обзор каталога","Заголовок и интро (п. 5.1 ТЗ). URL: /products/"],
+    ["2","4 плитки категорий","Серверы, ПК и моноблоки, Рабочие станции и SFF, СХД. В плитке: изображение, описание, отметка «В реестре МПТ» (где применимо), число моделей подставляется автоматически."],
+    ["CTA","Баннер КП","Повторяющийся блок для страниц каталога. Открывает модальную форму."],
+    ["Ф","Футер","Общий для всех страниц."]
+  ]},
+
+category:{ label:"Категория", url:"/products/servers/", render:()=>`${header("products")}
+  ${crumbs([["Главная","home"],["Продукты","products"],["Серверы"]])}
+  <section class="blk" style="padding-top:24px;border-top:0">${mk(1)}<div class="w">
+    <h1 class="h1">Серверы</h1>
+    <p class="lead">Двухпроцессорные стоечные серверы для ЦОД, виртуализации, хранения и обработки данных. Совместимы с Astra Linux и ALT Linux, поддерживают АПМДЗ «Соболь».</p>
+    <div class="grid g3" style="position:relative">${mk(2)}
+      ${prodCard(PRODUCTS.lga4189)}${prodCard(PRODUCTS.lga3647)}
+    </div>
+  </div></section>
+  ${ctaBand("Не нашли нужную конфигурацию?","Соберём сервер под ваше ТЗ: процессоры, память, диски, RAID, сетевые карты.")}
+  ${footer()}`,
+  notes:[
+    ["1","Заголовок и интро","1–2 предложения (п. 5.2 ТЗ). URL: /products/servers/"],
+    ["i","Фильтр","В первой версии не выводится, но заложен архитектурно: характеристики хранятся как поля, а не как текст."],
+    ["2","Плитки товаров","Фото, название и модель, 3 ключевые характеристики, бейдж «Реестр МПТ №…», кнопки «Подробнее» и «Скачать PDF». Данные двух серверов взяты из присланных даташитов."],
+    ["CTA","Баннер КП","Открывает модальную форму."]
+  ]},
+
+product:{ label:"Товар", url:"/products/servers/sevt-lga4189/", render:()=>{
+  const p = PRODUCTS[state.pid]; const other = PRODUCTS[state.pid==="lga4189"?"lga3647":"lga4189"];
+  const groups = Object.keys(p.specs);
+  return `${header("products")}
+  ${crumbs([["Главная","home"],["Продукты","products"],["Серверы","category"],[p.name]])}
+  <section class="blk" style="padding-top:24px;border-top:0">${mk(1)}<div class="w pp-top">
+    <div class="gal">${ph("Фото: вид спереди","main")}<div class="th">${["Спереди","Сзади","Сверху","В стойке"].map(t=>ph(t)).join("")}</div></div>
+    <div>
+      <div class="badges" style="position:relative">${mpt(p)}<span class="badge">ФСТЭК</span><span class="badge">ISO 9001</span></div>
+      <h1 class="h1" style="margin-top:14px">${p.name}</h1>
+      <dl class="meta"><dt>Модель</dt><dd>${p.model}</dd><dt>Форм-фактор</dt><dd>${p.ff}</dd><dt>Реестр МПТ</dt><dd>№ ${p.reg} · с ${p.regFrom} по ${p.regTo}</dd></dl>
+      <p class="muted">${p.purpose}</p>
+      <div class="btns" style="position:relative;margin-top:20px">${mk(2)}<button class="btn" data-pdf="${p.name}">Скачать даташит (PDF)</button><button class="btn ghost" data-kp="${p.name}">Запросить КП</button></div>
+      <div class="kpis">${p.kpi.map(k=>`<div><b>${k[0]}</b><span>${k[1]}</span></div>`).join("")}</div>
+    </div>
+  </div></section>
+  <section class="blk">${mk(3)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Характеристики</h2></div></div>
+    <div class="specs">
+      <nav class="toc">${groups.map((g,i)=>`<a data-scroll="sg${i}">${g}</a>`).join("")}</nav>
+      <div>${groups.map((g,i)=>`<div class="sgrp" id="sg${i}"><h3>${g}</h3><dl>${p.specs[g].map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl></div>`).join("")}
+      </div>
+    </div>
+  </div></section>
+  <section class="blk">${mk(4)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Почему заказывают у СЭВТ</h2></div></div>
+    <div class="grid g4 adv">${[["Быстрая поставка","Серийные конфигурации за 2–4 недели."],["Собственный ЗИП","Склад запчастей, замена без ожидания."],["Проработка ТЗ","Конфигурация под требования заказчика, в том числе защищённое от ПЭМИН исполнение."],["КП за 24 часа","Ответ с ценой и сроками на следующий рабочий день."]].map(a=>`<div class="card">${ph("ico","icon")}<div class="h3">${a[0]}</div><p class="muted" style="margin:0">${a[1]}</p></div>`).join("")}</div>
+  </div></section>
+  <section class="blk">${mk(5)}<div class="w">
+    <div class="head-row"><div><h2 class="h2">Другие серверы</h2></div><button class="btn ghost" data-go="category">Все серверы</button></div>
+    <div class="grid g3">${prodCard(other)}</div>
+  </div></section>
+  ${footer()}`},
+  notes:[
+    ["1","Шапка товара","Название, модель, форм-фактор, галерея, бейджи (реестр МПТ, ФСТЭК, ISO), назначение и 4 ключевые цифры. Данные из даташита."],
+    ["2","Главные кнопки","«Скачать даташит (PDF)» и «Запросить КП». Форма КП открывается с подставленной темой «Запрос КП: модель». Файл даташита заменяется в админке одной загрузкой (п. 6.2 ТЗ)."],
+    ["3","Характеристики","8 групп из п. 5.3 ТЗ. На десктопе — липкое оглавление слева, на мобильном — горизонтальные «чипсы». В даташите блок «АПМДЗ и СЗИ» подписан как «Слоты расширения» — в прототипе он перенесён в «Безопасность и ОС»."],
+    ["4","Блок преимуществ","Быстрая поставка, собственный ЗИП, проработка ТЗ, КП за 24 ч."],
+    ["5","Похожие товары","Другие модели той же категории."],
+    ["SEO","Микроразметка","Schema.org Product + Organization, ЧПУ вида /products/servers/sevt-lga4189/ (п. 6.3 ТЗ)."]
+  ]},
+
+solutions:{ label:"Решения и услуги", url:"/solutions/", render:()=>`${header("solutions")}
+  ${crumbs([["Главная","home"],["Решения и услуги"]])}
+  <section class="blk" style="padding-top:24px;border-top:0">${mk(1)}<div class="w">
+    <h1 class="h1">Решения и услуги</h1>
+    <p class="lead">«СЭВТ» — производитель вычислительной техники и системный интегратор. Разрабатываем АСУ и ПО, проектируем и оснащаем ситуационные центры, сети и рабочие места, сопровождаем внедрённые системы.</p>
+    <div style="position:relative">${mk(2)}
+    ${[["Производство и поставка","products",[["Производство компьютеров и серверов ТМ «СЭВТ»","Конфигурация под требования заказчика. По запросу — защищённое от ПЭМИН исполнение и модуль доверенной загрузки по требованиям ФСТЭК России."],["Поставка оборудования ведущих мировых производителей","Комплектация проектов оборудованием сторонних производителей."]]],
+       ["Интеграция","contacts",[["Разработка и сопровождение АСУ, ИС и ПО","Автоматизированные системы управления, комплексы средств автоматизации, АРМ, ПО общего и специального назначения. Информационное обследование объектов автоматизации, миграция на отечественные ОС."],["Ситуационные центры и конференц-залы","Системы обработки и отображения информации. Экран коллективного пользования: проекционная установка или видеостена."],["АРМ, ЛВС, СКС и компьютерные классы","Сертифицированный исполнитель работ по построению СКС, в том числе в защищённом исполнении."],["Монтаж, наладка и сопровождение","Монтаж и наладка оборудования, установка ПО на объектах заказчика и дальнейшее сопровождение."],["Обучение и консультации пользователей","Обучение и консультации пользователей внедрённых систем."]]],
+       ["НИОКР / ОКР","contacts",[["Заказные разработки (НИОКР / ОКР)","Разработки по лицензиям Рособоронзаказа и Роскосмоса."]]]
+      ].map(s=>`<div class="sol"><div><h2 class="h2" style="font-size:24px">${s[0]}</h2>${ph("Иллюстрация").replace('class="ph ','class="ph " style="aspect-ratio:4/3;margin-top:12px" ')}</div>
+        <ul>${s[2].map(it=>`<li><div><div class="h3">${it[0]}</div><p class="muted" style="margin:0">${it[1]}</p></div>
+          <button class="btn ghost sm" data-kp="${it[0]}">Обсудить</button></li>`).join("")}</ul></div>`).join("")}
+    </div>
+  </div></section>
+  ${ctaBand("Расскажите о задаче","Подготовим решение и коммерческое предложение. Можно приложить ТЗ.")}
+  ${footer()}`,
+  notes:[
+    ["1","Интро","Кратко о компании как об интеграторе и разработчике."],
+    ["2","Направления","Тексты взяты с действующего savt.ru (разделы услуг, «Ситуационные центры», «Разработка ПО», «Монтаж сетей и СКС»). 7 направлений из ТЗ сгруппированы по трём компетенциям с главной. Кнопка «Обсудить», открывающая форму КП с темой направления."],
+    ["CTA","Баннер КП","Открывает модальную форму."]
+  ]},
+
+contacts:{ label:"Контакты", url:"/contacts/", render:()=>`${header("contacts")}
+  ${crumbs([["Главная","home"],["Контакты"]])}
+  <section class="blk" style="padding-top:24px;border-top:0">${mk(1)}<div class="w cform">
+    <div><h1 class="h1">Контакты</h1>
+      <div class="clist" style="margin-top:20px">
+        <div><b>Телефон</b><span class="tel" style="font-size:20px">${CO.phone}</span></div>
+        <div><b>E-mail</b><span style="font-size:20px;user-select:all">${CO.mail}</span></div>
+        <div><b>Адрес</b>${CO.addr}</div>
+      </div>
+      <div class="card" style="margin-top:24px;position:relative">${mk(2)}<b style="padding-left:30px">Реквизиты</b>
+        <dl class="meta" style="margin:0"><dt>Организация</dt><dd>ООО «СЭВТ»</dd><dt>ИНН</dt><dd>${CO.inn}</dd><dt>КПП</dt><dd>${CO.kpp}</dd><dt>ОГРН</dt><dd>${CO.ogrn}</dd></dl>
+        <button class="btn ghost sm" style="justify-self:start" data-copy>Скопировать реквизиты</button></div>
+    </div>
+    <div class="card" style="padding:28px;position:relative">${mk(3)}<h2 class="h2" style="font-size:22px">Запросить КП / связаться</h2>${formHTML("contacts")}</div>
+  </div></section>
+  <section class="blk">${mk(4)}<div class="w">${ph("Карта: Москва, Старокалужское шоссе, 62 (Яндекс.Карты)").replace('class="ph ','class="ph " style="aspect-ratio:21/8;min-height:220px" ')}</div></section>
+  ${footer()}`,
+  notes:[
+    ["1","Контактные данные","Телефон, e-mail, адрес, режим работы. На мобильном телефон кликабелен (tel:)."],
+    ["2","Реквизиты","ИНН, КПП, ОГРН из даташитов. Кнопка копирования для бухгалтерии заказчика."],
+    ["3","Основная форма","Имя, Компания, Телефон/E-mail, Сообщение, файл ТЗ, согласие на обработку ПДн, «Отправить». Заявка сохраняется в админке и отправляется на e-mail Заказчика (п. 6.1 ТЗ)."],
+    ["4","Карта","Виджет Яндекс.Карт с меткой офиса."]
+  ]},
+
+sitemap:{ label:"Карта сайта", url:"—", render:()=>`
+  <section class="blk" style="border-top:0">${mk(1)}<div class="w">
+    <h1 class="h1">Карта сайта savt.ru</h1>
+    <p class="lead">Нажмите на страницу, чтобы открыть её прототип. Поддомен pr.savt.ru объединяется с основным сайтом.</p>
+    <div class="tree">
+      <div class="lvl"><div class="node root" data-go="home"><b>Главная</b><small>/ · лендинг из 9 блоков</small></div></div>
+      <div class="lvl">
+        <div class="node" data-go="products"><b>Продукты</b><small>/products/</small>
+          <div class="kids">${CATS.map(c=>`<span data-go="${c.id==="servers"?"category":"products"}">${c.name} → карточки товаров</span>`).join("")}</div></div>
+        <div class="node" data-go="solutions"><b>Решения и услуги</b><small>/solutions/</small>
+          <div class="kids"><span>Производство и поставка</span><span>Интеграция</span><span>НИОКР / ОКР</span></div></div>
+        <div class="node" data-go="contacts"><b>Контакты</b><small>/contacts/</small>
+          <div class="kids"><span>Форма КП</span><span>Реквизиты</span><span>Карта</span></div></div>
+        <div class="node"><b>Служебные</b><small>без пункта в меню</small>
+          <div class="kids"><span>Политика обработки ПДн</span><span>404</span><span>sitemap.xml</span></div></div>
+      </div>
+      <div class="lvl"><div class="node" data-go="category"><b>Шаблон: категория</b><small>/products/{категория}/</small></div>
+        <div class="node" data-go="product"><b>Шаблон: товар</b><small>/products/{категория}/{модель}/</small></div>
+        <div class="node" data-kp><b>Модальное окно «Запросить КП»</b><small>хедер, футер, товары, CTA</small></div></div>
+    </div>
+  </div></section>
+  <section class="blk">${mk(2)}<div class="w">
+    <h2 class="h2">Административная панель</h2><p class="muted">Внутренний интерфейс, в публичных прототипах не показан. Состав по разделу 7 ТЗ:</p>
+    <div class="admin">
+      <div class="card"><b>Страницы и структура</b><ul><li>создание, редактирование, скрытие, удаление</li><li>title и description для каждой страницы</li><li>ЧПУ-адреса</li></ul></div>
+      <div class="card"><b>Каталог</b><ul><li>категории и товары</li><li>характеристики по 8 группам</li><li>загрузка и замена PDF-даташитов</li><li>флаг «на главной», бейджи МПТ/ФСТЭК/ISO</li></ul></div>
+      <div class="card"><b>Заявки</b><ul><li>список заявок с вложениями</li><li>статусы: новая / в работе / закрыта</li><li>адреса e-mail для уведомлений</li></ul></div>
+    </div>
+  </div></section>`,
+  notes:[
+    ["1","Структура","Соответствует разделу 2 ТЗ. На этапе дизайна структура может незначительно меняться."],
+    ["2","Админка","Стили и элементы дизайна через админку не меняются (раздел 7 ТЗ)."]
+  ]}
+};
+
+function prodCard(p){
+  return `<div class="card prod">${ph("Фото сервера")}
+    <div class="badges">${mpt(p)}</div>
+    <div><div class="h3">${p.name}</div><div class="muted small">${p.model}</div></div>
+    <ul>${p.short.map(s=>`<li><i>${s[0]}</i><span>${s[1]}</span></li>`).join("")}</ul>
+    <div class="btns"><button class="btn sm" data-go="product" data-pid="${p.id}">Подробнее</button><button class="btn ghost sm" data-pdf="${p.name}">Скачать PDF</button></div>
+  </div>`;
+}
+function emptyCard(name, model, baikal){
+  return `<div class="card prod empty">${ph("Фото")}
+    <div class="badges"><span class="badge mpt">Реестр МПТ № [—]</span></div>
+    <div><div class="h3">${name}</div><div class="muted small">${model}</div></div>
+    <ul><li><i>Процессор</i><span>${baikal?"«Байкал-М»":"—"}</span></li><li><i>Память</i><span>—</span></li><li><i>Корпус</i><span>—</span></li></ul>
+    <div class="btns"><button class="btn sm" disabled style="opacity:.5;cursor:default">Подробнее</button><button class="btn ghost sm" disabled style="opacity:.5;cursor:default">Скачать PDF</button></div>
+  </div>`;
+}
+
+/* ---------- state & routing ---------- */
+const state = {page:"home", pid:"lga4189", dev:"desktop", notes:false};
+const order = ["home","products","category","product","solutions","contacts","sitemap"];
+const $ = s => document.querySelector(s);
+const site = $("#site"), frame = $("#frame"), stage = $("#stage");
+
+$("#pages").innerHTML = order.map(k=>`<button data-page="${k}" aria-pressed="false">${PAGES[k].label}</button>`).join("");
+
+function parseHash(){
+  const h = (location.hash||"").slice(1);
+  if (h.startsWith("product-")) { const id=h.slice(8); if (PRODUCTS[id]) { state.pid=id; return "product"; } }
+  return PAGES[h] ? h : "home";
+}
+function go(page, opts={}){
+  if (opts.pid) state.pid = opts.pid;
+  const hash = page==="product" ? "product-"+state.pid : page;
+  if (location.hash.slice(1)!==hash) { try{ history.replaceState(null,"","#"+hash); }catch(e){} }
+  state.page = page; render(opts.anchor);
+}
+function render(anchor){
+  const P = PAGES[state.page];
+  site.innerHTML = P.render();
+  document.querySelectorAll("#pages button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.page===state.page));
+  const url = state.page==="product" ? `/products/servers/sevt-${state.pid}/` : P.url;
+  const w = {desktop:"1440", tablet:"768", mobile:"375"}[state.dev];
+  $("#cap").textContent = `savt.ru${url==="—"?"":url} · ${w} px`;
+  $("#notes").innerHTML = `<h2>${P.label}${state.page==="product"?" · "+PRODUCTS[state.pid].name:""}</h2><ol>${P.notes.map(n=>`<li><span class="mk">${n[0]}</span><div><b>${n[1]}.</b> ${n[2]}</div></li>`).join("")}</ol>`;
+  if (anchor) { const el = document.getElementById(anchor); if (el) { el.scrollIntoView({block:"start"}); return; } }
+  frame.scrollIntoView({block:"start"}); window.scrollTo({top:0});
+}
+
+/* ---------- modal ---------- */
+const modal = $("#modal");
+function openKP(subject){
+  $("#mbody").innerHTML = `<h2 class="h2" id="mtitle" style="font-size:24px">Запросить КП</h2><p class="muted" style="margin:0 0 18px">Ответим в течение 24 часов. Можно приложить техническое задание.</p>${formHTML("modal", subject||null)}`;
+  modal.hidden = false; setTimeout(()=>{ const f=$("#modal-name"); f && f.focus(); },30);
+}
+function closeKP(){ modal.hidden = true; }
+$("#mclose").onclick = closeKP;
+modal.addEventListener("click", e=>{ if (e.target===modal) closeKP(); });
+document.addEventListener("keydown", e=>{ if (e.key==="Escape" && !modal.hidden) closeKP(); });
+
+/* ---------- interactions ---------- */
+let toastT;
+function flash(btn, text){ const old=btn.textContent; btn.textContent=text; clearTimeout(toastT); toastT=setTimeout(()=>btn.textContent=old,1800); }
+
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-go],[data-kp],[data-burger],[data-pdf],[data-scroll],[data-copy],[data-page],[data-dev]");
+  if (!t) return;
+  if (t.dataset.page){ go(t.dataset.page); return; }
+  if (t.dataset.dev){ state.dev=t.dataset.dev; frame.dataset.device=state.dev; document.querySelectorAll("#devs button").forEach(b=>b.setAttribute("aria-pressed", b===t)); render(); return; }
+  if (t.dataset.burger!==undefined){ const d=$("#drawer"); d && d.classList.toggle("open"); return; }
+  if (t.dataset.kp!==undefined){ e.preventDefault(); openKP(t.dataset.kp); return; }
+  if (t.dataset.pdf){ flash(t, "PDF скачивается…"); return; }
+  if (t.dataset.scroll){ const el=document.getElementById(t.dataset.scroll); el && el.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+  if (t.dataset.copy!==undefined){
+    const txt = `ООО «СЭВТ», ИНН ${CO.inn}, КПП ${CO.kpp}, ОГРН ${CO.ogrn}, ${CO.addr}`;
+    try{ navigator.clipboard.writeText(txt).then(()=>flash(t,"Скопировано"),()=>flash(t,"Выделите текст вручную")); }catch(err){ flash(t,"Выделите текст вручную"); }
+    return;
+  }
+  if (t.dataset.go){ e.preventDefault(); closeKP(); go(t.dataset.go, {pid:t.dataset.pid, anchor:t.dataset.anchor}); }
+});
+
+document.addEventListener("change", e=>{
+  if (e.target.type==="file"){ const n=e.target.closest(".file").querySelector("[data-fname]"); n.textContent = e.target.files[0] ? e.target.files[0].name : "PDF, DOC, XLS до 20 МБ"; }
+});
+document.addEventListener("submit", e=>{
+  const f = e.target.closest("[data-form]"); if (!f) return;
+  e.preventDefault();
+  const err = f.querySelector("[data-err]");
+  const name=f.querySelector('[name="name"]').value.trim(), contact=f.querySelector('[name="contact"]').value.trim(), agree=f.querySelector('[name="agree"]').checked;
+  if (!name || !contact){ err.textContent="Укажите имя и телефон или e-mail, чтобы мы могли ответить."; return; }
+  if (!agree){ err.textContent="Отметьте согласие на обработку персональных данных."; return; }
+  f.outerHTML = `<div class="done"><b>Заявка отправлена</b><span class="muted">Менеджер свяжется с вами в течение 24 часов. Прототип: заявка никуда не отправляется.</span></div>`;
+});
+
+$("#shownotes").addEventListener("change", e=>{ state.notes=e.target.checked; stage.classList.toggle("nonotes", !state.notes); });
+window.addEventListener("hashchange", ()=>{ const p=parseHash(); if (p!==state.page || p==="product") { state.page=p; render(); } });
+
+state.page = parseHash();
+render();
+</script>
+</body>
+</html>
