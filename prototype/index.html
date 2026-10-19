@@ -635,7 +635,7 @@ solutions:{ label:"Решения и услуги", url:"/solutions/", render:()
        ["НИОКР / ОКР","contacts",[["Заказные разработки (НИОКР / ОКР)","Разработки по лицензиям Рособоронзаказа и Роскосмоса."]]]
       ].map(s=>`<div class="sol"><div><h2 class="h2" style="font-size:24px">${s[0]}</h2>${ph("Иллюстрация").replace('class="ph ','class="ph " style="aspect-ratio:4/3;margin-top:12px" ')}</div>
         <ul>${s[2].map(it=>`<li><div><div class="h3">${it[0]}</div><p class="muted" style="margin:0">${it[1]}</p></div>
-          <button class="btn ghost sm" data-kp="${it[0]}">Обсудить</button></li>`).join("")}</ul></div>`).join("")}
+          </li>`).join("")}</ul></div>`).join("")}
     </div>
   </div></section>
   ${ctaBand("Расскажите о задаче","Подготовим решение и коммерческое предложение. Можно приложить ТЗ.")}
