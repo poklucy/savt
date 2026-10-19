@@ -134,7 +134,17 @@ a.card:hover,.card.click:hover{border-color:var(--accent);box-shadow:0 6px 20px 
 
 /* home */
 .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
-.hero .ph{aspect-ratio:5/4;max-width:100%}
+.hero .sw{position:relative;aspect-ratio:5/4;max-width:100%;min-width:0}
+.sw-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;border-radius:6px}
+.sw-track::-webkit-scrollbar{display:none}
+.sw-track > .ph{flex:0 0 100%;height:100%;scroll-snap-align:start;border-radius:0}
+.sw-arr{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s,border-color .15s}
+.sw-arr:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sw-arr.prev{left:12px}.sw-arr.next{right:12px}
+.sw-dots{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:8px}
+.sw-dots button{width:8px;height:8px;padding:0;border-radius:4px;border:0;background:var(--ph-line);cursor:pointer;transition:width .2s,background .2s}
+.sw-dots button:hover{background:var(--muted)}
+.sw-dots button[aria-current="true"]{width:24px;background:var(--accent)}
 .trust{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:8px}
 .trust > div{padding:18px 20px;border-left:1px solid var(--line);min-width:0}
 .trust > div:first-child{border-left:0}
@@ -321,7 +331,7 @@ details.case .dash{margin-top:8px}
 <body>
 
 <div class="bar">
-  <h1>СЭВТ · прототипы сайта<small>Этап 1 · v4 · 09.10.2026</small></h1>
+  <h1>СЭВТ · прототипы сайта<small>Этап 1 · v5 · 19.10.2026</small></h1>
   <div class="seg" id="pages" role="group" aria-label="Страница"></div>
   <div class="spacer"></div>
   <div class="seg" id="devs" role="group" aria-label="Устройство">
@@ -467,7 +477,12 @@ home:{ label:"Главная", url:"/", render:()=>`${header("home")}
       <h1 class="h1">Российский производитель серверов и компьютеров с 1995 года</h1>
       <p class="lead">ПЭВМ и серверы марки «СЭВТ», разработка АСУ и информационных систем, ситуационные центры. Лицензии ФСБ России, Рособоронзаказа и Роскосмоса.</p>
       <div class="btns"><button class="btn" data-go="products">Продукты</button><button class="btn ghost" data-kp>Запросить КП</button></div></div>
-    ${ph("Фото: серверная стойка / цех сборки")}
+    <div class="sw" data-sw aria-roledescription="carousel" aria-label="Фото производства">
+      <div class="sw-track">${["Фото 1/4: серверная стойка","Фото 2/4: цех сборки","Фото 3/4: тестирование техники","Фото 4/4: склад ЗИП"].map(t=>ph(t)).join("")}</div>
+      <button class="sw-arr prev" data-sw-step="-1" aria-label="Предыдущий слайд">‹</button>
+      <button class="sw-arr next" data-sw-step="1" aria-label="Следующий слайд">›</button>
+      <div class="sw-dots">${[0,1,2,3].map(i=>`<button data-sw-to="${i}" aria-label="Слайд ${i+1}" aria-current="${i===0}"></button>`).join("")}</div>
+    </div>
   </div></section>
   <section class="blk" style="padding-block:0 56px;border-top:0">${mk(2)}<div class="w"><div class="trust">
     <div><b>Реестр МПТ</b><span class="muted small">серверы и ПК в реестре российской радиоэлектроники</span></div>
@@ -514,7 +529,7 @@ home:{ label:"Главная", url:"/", render:()=>`${header("home")}
   </div></section>
   ${footer()}`,
   notes:[
-    ["1","Герой","Позиционирование + 2 CTA: «Продукты» (каталог) и «Запросить КП» (модальное окно). Фото предоставляет Заказчик."],
+    ["1","Герой","Позиционирование + 2 CTA: «Продукты» (каталог) и «Запросить КП» (модальное окно). Справа свайпер с фото (серверная стойка, цех сборки и др.): листается свайпом, стрелками и точками, автопрокрутка каждые 5 с с паузой при наведении. Фото предоставляет Заказчик."],
     ["2","Лента доверия","5 фактов из ТЗ: реестр МПТ, ФСТЭК до «СС», ISO 9001, 30 лет, 1000+ госзаказов. На мобильном 2 колонки."],
     ["3","Три компетенции","Карточки-переходы: Производство → Продукты; Интеграция и НИОКР → Решения и услуги."],
     ["4","Витрина","Серверы из даташитов и ПЭВМ Savt ET-541 / ET-641 на «Байкал-М» (в реестре МПТ по данным savt.ru, характеристики — от Заказчика). Товары выбираются в админке флагом «показывать на главной». Пунктирные карточки ждут данных Заказчика."],
@@ -754,8 +769,9 @@ let toastT;
 function flash(btn, text){ const old=btn.textContent; btn.textContent=text; clearTimeout(toastT); toastT=setTimeout(()=>btn.textContent=old,1800); }
 
 document.addEventListener("click", e=>{
-  const t = e.target.closest("[data-go],[data-kp],[data-burger],[data-pdf],[data-scroll],[data-copy],[data-page],[data-dev]");
+  const t = e.target.closest("[data-go],[data-kp],[data-burger],[data-pdf],[data-scroll],[data-copy],[data-page],[data-dev],[data-sw-step],[data-sw-to]");
   if (!t) return;
+  if (t.dataset.swStep || t.dataset.swTo){ const sw=t.closest("[data-sw]"); swGo(sw, t.dataset.swTo!==undefined ? +t.dataset.swTo : swIndex(sw)+ +t.dataset.swStep); return; }
   if (t.dataset.page){ go(t.dataset.page); return; }
   if (t.dataset.dev){ state.dev=t.dataset.dev; frame.dataset.device=state.dev; document.querySelectorAll("#devs button").forEach(b=>b.setAttribute("aria-pressed", b===t)); render(); return; }
   if (t.dataset.burger!==undefined){ const d=$("#drawer"); d && d.classList.toggle("open"); return; }
@@ -782,6 +798,16 @@ document.addEventListener("submit", e=>{
   if (!agree){ err.textContent="Отметьте согласие на обработку персональных данных."; return; }
   f.outerHTML = `<div class="done"><b>Заявка отправлена</b><span class="muted">Менеджер свяжется с вами в течение 24 часов. Прототип: заявка никуда не отправляется.</span></div>`;
 });
+
+/* ---------- hero swiper: native scroll-snap for touch swipe, arrows/dots/autoplay on top ---------- */
+function swIndex(sw){ const tr=sw.querySelector(".sw-track"); return Math.round(tr.scrollLeft / tr.clientWidth); }
+function swGo(sw, i){ const tr=sw.querySelector(".sw-track"), n=tr.children.length; i=(i+n)%n; tr.scrollTo({left:i*tr.clientWidth}); }
+document.addEventListener("scroll", e=>{
+  const tr=e.target; if (!tr.classList || !tr.classList.contains("sw-track")) return;
+  const i=swIndex(tr.parentElement); tr.parentElement.querySelectorAll(".sw-dots button").forEach((d,k)=>d.setAttribute("aria-current", k===i));
+}, true);
+const swReduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+setInterval(()=>{ if (swReduce) return; document.querySelectorAll("[data-sw]").forEach(sw=>{ if (!sw.matches(":hover") && !sw.contains(document.activeElement)) swGo(sw, swIndex(sw)+1); }); }, 5000);
 
 $("#shownotes").addEventListener("change", e=>{ state.notes=e.target.checked; stage.classList.toggle("nonotes", !state.notes); });
 window.addEventListener("hashchange", ()=>{ const p=parseHash(); if (p!==state.page || p==="product") { state.page=p; render(); } });
