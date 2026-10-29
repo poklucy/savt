@@ -189,6 +189,9 @@ a.card:hover,.card.click:hover{border-color:var(--accent);box-shadow:0 6px 20px 
 .gal .th .ph{aspect-ratio:1;cursor:pointer}
 .gal .th .ph:first-child{border-color:var(--accent)}
 .meta{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13.5px;margin:16px 0 20px}
+.lic-meta{gap:0 20px;font-size:14px}
+.lic-meta dt,.lic-meta dd{padding:10px 0;border-top:1px solid var(--line)}
+@media (max-width:560px){.lic-meta{grid-template-columns:1fr}.lic-meta dd{border-top:0;padding-top:0}}
 .meta dt{color:var(--muted)}.meta dd{margin:0;font-weight:500}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;margin-top:24px}
 .kpis div{padding:14px 16px;border-left:1px solid var(--line);min-width:0}
@@ -331,7 +334,7 @@ details.case .dash{margin-top:8px}
 <body>
 
 <div class="bar">
-  <h1>СЭВТ · прототипы сайта<small>Этап 1 · v5 · 19.10.2026</small></h1>
+  <h1>СЭВТ · прототипы сайта<small>Этап 1 · v6 · 29.10.2026</small></h1>
   <div class="seg" id="pages" role="group" aria-label="Страница"></div>
   <div class="spacer"></div>
   <div class="seg" id="devs" role="group" aria-label="Устройство">
@@ -371,7 +374,8 @@ const PRODUCTS = {
     reg:"10736315", regFrom:"11.11.2025", regTo:"10.11.2030",
     purpose:"Хранение, резервное копирование и оперативная обработка больших массивов данных, выполнение ресурсоёмких вычислений, построение облачных инфраструктур.",
     kpi:[["2 × CPU","Intel Xeon Scalable Gen3"],["до 40","ядер на процессор"],["до 8 ТБ","DDR4 ECC, 16 слотов"],["до 24","дисков 2,5″ в 2U"]],
-    short:[["Процессоры","2 × Intel Xeon Scalable Gen3, до 40 ядер"],["Память","до 8 192 ГБ DDR4 ECC"],["Корпус","2U, до 24 × 2,5″ / 12 × 3,5″"]],
+    desc:"Хранение, резервное копирование и обработка больших массивов данных, ресурсоёмкие вычисления, облачные инфраструктуры.",
+    short:[["Форм-фактор","2U 19″ (опционально 4U)"],["Процессоры","2 × Intel Xeon Scalable Gen3, до 40 ядер, до 4,4 ГГц"],["Память","16 слотов DDR4 ECC, до 8 192 ГБ"]],
     specs:{
       "Процессор":[["Количество / сокет","2 процессора, сокет LGA4189"],["Поддерживаемые ЦПУ","Intel Xeon Scalable Gen3 (Ice Lake-SP)"],["Макс. конфигурация","до 40 ядер на CPU, до 4,4 ГГц Turbo, кэш L3 до 60 МБ"],["Виртуализация","Intel VT-x / VT-d"]],
       "Память":[["Слоты / тип","16 слотов DDR4 ECC RDIMM / LRDIMM"],["Максимальный объём","до 8 192 ГБ"]],
@@ -388,7 +392,8 @@ const PRODUCTS = {
     reg:"10736314", regFrom:"11.11.2025", regTo:"10.11.2030",
     purpose:"Хранение, резервное копирование и оперативная обработка больших массивов данных, выполнение ресурсоёмких вычислений, построение облачных инфраструктур.",
     kpi:[["2 × CPU","Intel Xeon Scalable Gen1/Gen2"],["до 28","ядер на процессор"],["до 4 ТБ","DDR4 ECC, 16 слотов"],["до 24","дисков 2,5″ в 2U"]],
-    short:[["Процессоры","2 × Intel Xeon Scalable Gen1/Gen2, до 28 ядер"],["Память","до 4 096 ГБ DDR4 ECC"],["Корпус","2U, до 24 × 2,5″ / 12 × 3,5″"]],
+    desc:"Хранение, резервное копирование и обработка больших массивов данных, ресурсоёмкие вычисления, облачные инфраструктуры.",
+    short:[["Форм-фактор","2U 19″ (опционально 4U)"],["Процессоры","2 × Intel Xeon Scalable Gen1/Gen2, до 28 ядер, до 4 ГГц"],["Память","16 слотов DDR4 ECC, до 4 096 ГБ"]],
     specs:null
   }
 };
@@ -499,7 +504,7 @@ home:{ label:"Главная", url:"/", render:()=>`${header("home")}
     </div></div></section>
   <section class="blk">${mk(4)}<div class="w">
     <div class="head-row"><div><h2 class="h2">Оборудование из реестра Минпромторга</h2></div><button class="btn ghost" data-go="products">Весь каталог</button></div>
-    <div class="grid g4">${prodCard(PRODUCTS.lga4189)}${prodCard(PRODUCTS.lga3647)}${emptyCard("ПЭВМ Savt ET-541","Десктоп · «Байкал-М»",1)}${emptyCard("Моноблок Savt ET-641","Моноблок · «Байкал-М»",1)}</div>
+    <div class="grid g4">${prodCard(PRODUCTS.lga4189)}${prodCard(PRODUCTS.lga3647)}${emptyCard("ПЭВМ Savt ET-541","Savt ET-541","Десктоп")}${emptyCard("Моноблок Savt ET-641","Savt ET-641","Моноблок")}</div>
   </div></section>
   <section class="blk why">${mk(5)}<div class="w">
     <div class="head-row"><div><h2 class="h2">Полный цикл: от ТЗ до сервиса</h2></div></div>
@@ -519,7 +524,7 @@ home:{ label:"Главная", url:"/", render:()=>`${header("home")}
   </div></section>
   <section class="blk" id="certs">${mk(8)}<div class="w">
     <div class="head-row"><div><h2 class="h2">Лицензии и сертификаты</h2></div></div>
-    <div class="grid g4 cert">${["Реестр Минпромторга","Лицензия ФСБ России","Лицензия ФСТЭК России","Лицензия Рособоронзаказа","Лицензия Роскосмоса","Сертификат Таможенного союза","ГОСТ Р ИСО 9001-2015","ГОСТ РВ 0015-002-2012"].map(t=>`<a class="card">${ph("Скан документа")}<div class="h3" style="font-size:15px">${t}</div></a>`).join("")}</div>
+    <div class="grid g4 cert">${LICS.map((l,i)=>`<a class="card" data-lic="${i}">${ph("Скан документа")}<div><div class="h3" style="font-size:15px">${l.title}</div><span class="muted small">№ ${l.num}</span></div></a>`).join("")}</div>
   </div></section>
   <section class="blk">${mk(9)}<div class="w cform">
     <div><h2 class="h2">Обсудим ваш проект</h2>
@@ -536,7 +541,7 @@ home:{ label:"Главная", url:"/", render:()=>`${header("home")}
     ["5","Почему СЭВТ","Тёмно-синяя секция (вторичный цвет #03294E): полный цикл, ЗИП, КП за 24 ч, поставка 2–4 недели."],
     ["6","О компании","История с действующего savt.ru («Подробнее о нас»). Фото и финальную редакцию текста даёт Заказчик. Якорь #about из меню."],
     ["7","Клиенты","Сетка логотипов (12 шт., монохром, цвет при наведении) и строка сегментов."],
-    ["8","Лицензии","Перечень по разделу «Лицензии и сертификаты» savt.ru + ФСТЭК и реестр МПТ из ТЗ. Номера и сроки — со сканов Заказчика. Увеличение по клику, управление из админки."],
+    ["8","Лицензии","По клику на карточку открывается попап: тип документа, название, номер, кому выдана, кем выдана, на что, дата (данные — пример). Перечень по разделу «Лицензии и сертификаты» savt.ru + ФСТЭК и реестр МПТ из ТЗ. Номера и сроки — со сканов Заказчика. Увеличение по клику, управление из админки."],
     ["9","Контакты + форма","Краткий блок. Форма та же, что «Запросить КП» (п. 6.1 ТЗ): заявка сохраняется в админке и уходит на e-mail."],
     ["Ф","Футер","Навигация, контакты, реквизиты, кнопка КП, ссылка на политику ПДн."]
   ]},
@@ -709,15 +714,17 @@ function prodCard(p){
   return `<div class="card prod">${ph("Фото сервера")}
     <div class="badges">${mpt(p)}</div>
     <div><div class="h3">${p.name}</div><div class="muted small">${p.model}</div></div>
+    <p class="muted small" style="margin:0">${p.desc}</p>
     <ul>${p.short.map(s=>`<li><i>${s[0]}</i><span>${s[1]}</span></li>`).join("")}</ul>
     <div class="btns"><button class="btn sm" data-go="product" data-pid="${p.id}">Подробнее</button><button class="btn ghost sm" data-pdf="${p.name}">Скачать PDF</button></div>
   </div>`;
 }
-function emptyCard(name, model, baikal){
+function emptyCard(name, model, ff){
   return `<div class="card prod empty">${ph("Фото")}
     <div class="badges"><span class="badge mpt">Реестр МПТ № [—]</span></div>
     <div><div class="h3">${name}</div><div class="muted small">${model}</div></div>
-    <ul><li><i>Процессор</i><span>${baikal?"«Байкал-М»":"—"}</span></li><li><i>Память</i><span>—</span></li><li><i>Корпус</i><span>—</span></li></ul>
+    <p class="muted small" style="margin:0">${ff?"ПЭВМ на отечественном процессоре «Байкал-М».":"—"}</p>
+    <ul><li><i>Форм-фактор</i><span>${ff||"—"}</span></li><li><i>Процессор</i><span>${ff?"«Байкал-М»":"—"}</span></li><li><i>Память</i><span>—</span></li></ul>
     <div class="btns"><button class="btn sm" disabled style="opacity:.5;cursor:default">Подробнее</button><button class="btn ghost sm" disabled style="opacity:.5;cursor:default">Скачать PDF</button></div>
   </div>`;
 }
@@ -755,6 +762,24 @@ function render(anchor){
 
 /* ---------- modal ---------- */
 const modal = $("#modal");
+// example data for the prototype; final numbers and dates come from the customer's scans
+const LICS = [
+  {kind:"Реестр", title:"Реестр Минпромторга", num:"10736315", issuer:"Минпромторг России", scope:"Включение сервера СЭВТ (LGA4189) в единый реестр российской радиоэлектронной продукции", date:"11.11.2025 — до 10.11.2030"},
+  {kind:"Лицензия", title:"Лицензия ФСБ России", num:"ЛСЗ0017733 18038Н", issuer:"Центр по лицензированию, сертификации и защите государственной тайны ФСБ России", scope:"Разработка и производство шифровальных (криптографических) средств, работы и услуги в этой области", date:"21.09.2020 — бессрочно"},
+  {kind:"Лицензия", title:"Лицензия ФСТЭК России", num:"Л024-00107-00/00581234", issuer:"ФСТЭК России", scope:"Деятельность по технической защите конфиденциальной информации", date:"15.03.2021 — бессрочно"},
+  {kind:"Лицензия", title:"Лицензия Минпромторга", num:"Л052-00102-77/00648376", issuer:"Минпромторг России", scope:"Разработка, производство и сервисное обслуживание вооружения и военной техники", date:"04.05.2023 — бессрочно"},
+  {kind:"Лицензия", title:"Лицензия Роскосмоса", num:"1698К", issuer:"Госкорпорация «Роскосмос»", scope:"Осуществление космической деятельности", date:"03.09.2012 — бессрочно"},
+  {kind:"Сертификат", title:"Сертификат Таможенного союза", num:"ЕАЭС RU С-RU.АБ12.В.01234", issuer:"Орган по сертификации продукции", scope:"Соответствие вычислительной техники модели «СЭВТ» техническим регламентам ТР ТС 004/2011 и 020/2011", date:"14.04.2022 — до 13.04.2027"},
+  {kind:"Сертификат", title:"ГОСТ Р ИСО 9001-2015", num:"СМК.RU.0123.2024", issuer:"Орган по сертификации систем менеджмента качества", scope:"Система менеджмента качества при разработке и производстве средств вычислительной техники", date:"20.06.2024 — до 19.06.2027"},
+  {kind:"Сертификат", title:"ГОСТ РВ 0015-002-2012", num:"ВР 01.1.12345-2024", issuer:"Система добровольной сертификации «Военный регистр»", scope:"Система менеджмента качества организации — поставщика продукции для нужд обороны", date:"20.06.2024 — до 19.06.2027"}
+];
+function openLic(i){
+  const l = LICS[i];
+  $("#mbody").innerHTML = `<span class="badge">${l.kind}</span><h2 class="h2" id="mtitle" style="font-size:24px;margin-top:10px">${l.title}</h2>
+    <dl class="meta lic-meta"><dt>Номер</dt><dd>${l.num}</dd><dt>Кому выдана</dt><dd>ООО «СЭВТ», ИНН ${CO.inn}</dd><dt>Кем выдана</dt><dd>${l.issuer}</dd><dt>На что</dt><dd>${l.scope}</dd><dt>Дата</dt><dd>${l.date}</dd></dl>
+    <div class="btns"><button class="btn" data-pdf="${l.title}">Открыть скан</button><button class="btn ghost" data-close>Закрыть</button></div>`;
+  modal.hidden = false;
+}
 function openKP(subject){
   $("#mbody").innerHTML = `<h2 class="h2" id="mtitle" style="font-size:24px">Запросить КП</h2><p class="muted" style="margin:0 0 18px">Ответим в течение 24 часов. Можно приложить техническое задание.</p>${formHTML("modal", subject||null)}`;
   modal.hidden = false; setTimeout(()=>{ const f=$("#modal-name"); f && f.focus(); },30);
@@ -769,8 +794,10 @@ let toastT;
 function flash(btn, text){ const old=btn.textContent; btn.textContent=text; clearTimeout(toastT); toastT=setTimeout(()=>btn.textContent=old,1800); }
 
 document.addEventListener("click", e=>{
-  const t = e.target.closest("[data-go],[data-kp],[data-burger],[data-pdf],[data-scroll],[data-copy],[data-page],[data-dev],[data-sw-step],[data-sw-to]");
+  const t = e.target.closest("[data-go],[data-kp],[data-burger],[data-pdf],[data-scroll],[data-copy],[data-page],[data-dev],[data-sw-step],[data-sw-to],[data-lic],[data-close]");
   if (!t) return;
+  if (t.dataset.lic){ openLic(+t.dataset.lic); return; }
+  if (t.dataset.close!==undefined){ closeKP(); return; }
   if (t.dataset.swStep || t.dataset.swTo){ const sw=t.closest("[data-sw]"); swGo(sw, t.dataset.swTo!==undefined ? +t.dataset.swTo : swIndex(sw)+ +t.dataset.swStep); return; }
   if (t.dataset.page){ go(t.dataset.page); return; }
   if (t.dataset.dev){ state.dev=t.dataset.dev; frame.dataset.device=state.dev; document.querySelectorAll("#devs button").forEach(b=>b.setAttribute("aria-pressed", b===t)); render(); return; }
